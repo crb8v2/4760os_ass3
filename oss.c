@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
 //    printf("%d\n", pint[1]);
 
     //command line options
-    while ((cc = getopt (argc, argv, "hs:n:")) != -1)
+    while ((cc = getopt (argc, argv, "hs:t:")) != -1)
         switch (cc)
         {
             case 'h':
@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
 
         //alarm times out if forks all do not return in 2 seconds
         signal(SIGALRM, ALARMhandler);
-        alarm(2);
+        alarm(tt);
 
         // fork defaults: 5 forks, terminate after 2 seconds
         for(int ii = 0; ii < ss; ii++) {
