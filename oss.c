@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <string.h>
 
 #define SHMKEY 123123
 
@@ -21,11 +22,13 @@ int main(int argc, char **argv) {
     // cc user choice for switch, ss number of processes (def 5),
     // tt is max time until master terminates all children.
     int cc, ss = 5, tt = 2;
-    int exampleSize[2];
+    int exampleSize[3];
+    char filename [50];
+
 
     // BLOCK FOR SHARED MEM
     //shared memory (key, size, permissions)
-    int shmid = shmget ( SHMKEY, sizeof(exampleSize[2]), 0775 | IPC_CREAT );
+    int shmid = shmget ( SHMKEY, sizeof(exampleSize[3]), 0775 | IPC_CREAT );
     //get pointer to memory block
     char * paddr = ( char * )( shmat ( shmid, NULL, 0 ) );
     int * pint = ( int * )( paddr );
@@ -34,9 +37,13 @@ int main(int argc, char **argv) {
 //    printf("%d\n", pint[1]);
 
     //command line options
-    while ((cc = getopt (argc, argv, "hs:t:")) != -1)
+    while ((cc = getopt (argc, argv, "hl:s:t:")) != -1)
         switch (cc)
         {
+            case 'l':
+                strncpy(filename, optarg, 50);
+                printf("%s",filename);
+                break;
             case 'h':
                 helpMenu();
                 break;
@@ -76,6 +83,7 @@ int main(int argc, char **argv) {
         // clean shared mem
         shmdt(pint);
         printf("\n end of parent \n");
+        printf("%s", filename);
 
         return 0;
 }
@@ -98,8 +106,7 @@ void helpMenu() {
 }
 
 // alarm magic
-static void ALARMhandler()
-{
+static void ALARMhandler() {
     printf("Time ran out!\n");
     exit(EXIT_SUCCESS);
 }
