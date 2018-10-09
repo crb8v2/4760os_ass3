@@ -13,7 +13,6 @@
 
 void sharedMemory();
 void helpMenu();
-void forker();
 static void ALARMhandler();
 
 
@@ -25,35 +24,34 @@ int main(int argc, char **argv) {
     int exampleSize[3];
     char filename [50];
 
-
     // BLOCK FOR SHARED MEM
     //shared memory (key, size, permissions)
     int shmid = shmget ( SHMKEY, sizeof(exampleSize[3]), 0775 | IPC_CREAT );
     //get pointer to memory block
     char * paddr = ( char * )( shmat ( shmid, NULL, 0 ) );
     int * pint = ( int * )( paddr );
-    //checks shmem
-//    pint[0] = 666;
-//    printf("%d\n", pint[1]);
+    pint[0] = 0;
+    pint[1] = 0;
+    pint[2] = 0;
 
     //command line options
     while ((cc = getopt (argc, argv, "hl:s:t:")) != -1)
         switch (cc)
         {
             case 'l':
+                //save the filename to the logfile
                 strncpy(filename, optarg, 50);
-                printf("%s",filename);
                 break;
             case 'h':
                 helpMenu();
                 break;
 
             case 's':
-                ss = atoi(optarg);           // forks allowed at once
+                ss = atoi(optarg);
                 break;
 
             case 't':
-                tt = atoi(optarg);           // master max time
+                tt = atoi(optarg);
                 break;
 
             case '?':
@@ -76,25 +74,42 @@ int main(int argc, char **argv) {
         alarm(tt);
 
         // fork defaults: 5 forks, terminate after 2 seconds
+        // manage
+        pid_t pidHolder[ss];
         for(int ii = 0; ii < ss; ii++) {
-            forker();
+
+            if ((pidHolder[ii] = fork()) == 0) {
+                execl("./user", "user", NULL);
+            }
         }
 
+        for(int aa = 0; aa < 10; aa++){
+            pint[0]++;
+            printf("%d\n", pint[0]);
+            usleep(100000);
+        }
+
+        // pid and times to log
+        for(int bb = 0; bb < ss; bb++){
+            if(wait(NULL)==pidHolder[bb]){
+                //create file and write
+                printf("pid %d at time %d %d \n", pidHolder[bb], pint[0], pint[1]);
+                FILE *fp = fopen(filename,"a+");
+                fputs("Child: ", fp);
+                fprintf(fp, "%d", pidHolder[bb]);
+                fputs(" is terminating at my time ", fp);
+                fprintf(fp, "%d %s %d %s", pint[0], "seconds,", pint[1], "nanoseconds.\n");
+                fputs(" end \n", fp);
+                fclose(fp);
+            }
+        }
+
+        wait(NULL);
         // clean shared mem
         shmdt(pint);
         printf("\n end of parent \n");
-        printf("%s", filename);
 
         return 0;
-}
-
-void forker() {
-
-    if (fork() == 0){
-        execl("./user", "user", NULL);
-    }
-
-    wait(NULL);
 }
 
 void helpMenu() {
@@ -110,3 +125,20 @@ static void ALARMhandler() {
     printf("Time ran out!\n");
     exit(EXIT_SUCCESS);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+//            FILE *fp = fopen(optarg,"a+");
+//            fputs("string bean \n",fp);
+//            fputs("string bean \n",fp);
+//            fputs("string bean \n",fp);
+//            fclose(fp);

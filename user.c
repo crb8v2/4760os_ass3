@@ -27,9 +27,13 @@ int main () {
     //  check if termination time
     //  cede critical section to another child
 
+    usleep(500000);
     printf("\nhello from the user\n");
 
-    usleep(500000);
+
+
+
+
 
     return 0;
 }
