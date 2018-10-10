@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
@@ -28,12 +27,21 @@ int main () {
 
 
     printf("\nhello from the user\n");
+
+    // *** CREATE SEMAPHORE
 //    sem_t *sem = sem_open("mysem", O_CREAT | O_EXCL, 0777, 1);
-//
+
+
+//  // *** WAIT FOR SEMAPHORE
 //    sem_wait(sem);
 
+
+// ########################
+// ### CRITICAL SECTION ###
+// ########################
     cint[2] = 1;
 
+    // *** SIGNAL SEMAPHORE ***
 //    sem_post(sem);
 
     usleep(500000);
@@ -41,53 +49,3 @@ int main () {
 
     return 0;
 }
-
-
-//    sem_t mutex;
-//
-//    wait(mutex);
-
-//    critcal section
-
-// signal()
-
-int criticalSection() {
-
-
-    printf("hello from the critical section");
-    return 1;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//shmem tests
-//    cint[1] = 777;
-//    printf("%d\n", cint[0]);
-
-//TO DO
-// read clock time
-// generate rand number 1-1,000,000
-// add to clock time and create termination deadline
-//
-// critical section with semaphors
-//  check if termination time
-//  cede critical section to another child
-
-
