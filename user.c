@@ -5,8 +5,18 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <semaphore.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <pthread.h>
+
 
 #define SHMKEY 123123
+
+int criticalSection();
+
+sem_t *mutex;
 
 int main () {
 
@@ -16,13 +26,34 @@ int main () {
     // pointer to shared memory that prints n
     int *cint = ( shmat ( shmid, NULL, 0 ) );
 
+//    sem_t *sem = sem_open("mysem", O_CREAT | O_EXCL, 0777, 1);
+//
+//    sem_wait(mutex);
 
     cint[2] = 1;
+
+//    sem_post(mutex);
 
     usleep(500000);
     printf("\nhello from the user\n");
 
     return 0;
+}
+
+
+//    sem_t mutex;
+//
+//    wait(mutex);
+
+//    critcal section
+
+// signal()
+
+int criticalSection() {
+
+
+    printf("hello from the critical section");
+    return 1;
 }
 
 
@@ -32,14 +63,15 @@ int main () {
 
 
 
-//
-//    sem_t mutex;
-//
-//    wait(mutex);
 
-//    critcal section
 
-// signal()
+
+
+
+
+
+
+
 
 
 
