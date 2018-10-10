@@ -24,12 +24,15 @@ int main(int argc, char **argv) {
     int exampleSize[3];
     char filename [50];
 
-    // BLOCK FOR SHARED MEM
+    //#############################
+    // ### BLOCK FOR SHARED MEM ###
+    //#############################
     //shared memory (key, size, permissions)
     int shmid = shmget ( SHMKEY, sizeof(exampleSize[3]), 0775 | IPC_CREAT );
     //get pointer to memory block
     char * paddr = ( char * )( shmat ( shmid, NULL, 0 ) );
     int * pint = ( int * )( paddr );
+    // 0: seconds 1: nanoseconds 2: shmsg
     pint[0] = 0;
     pint[1] = 0;
     pint[2] = 0;
@@ -38,23 +41,24 @@ int main(int argc, char **argv) {
     while ((cc = getopt (argc, argv, "hl:s:t:")) != -1)
         switch (cc)
         {
-            case 'l':
+
+            case 'l': // for filename
                 //save the filename to the logfile
                 strncpy(filename, optarg, 50);
                 break;
-            case 'h':
+            case 'h': //help menu
                 helpMenu();
                 break;
 
-            case 's':
+            case 's': // number of active children
                 ss = atoi(optarg);
                 break;
 
-            case 't':
+            case 't': // time to terminate
                 tt = atoi(optarg);
                 break;
 
-            case '?':
+            case '?': // error handles
                 if (optopt == 'n')
                     fprintf (stderr, "Option -%c requires an argument.\n", optopt);
                 else if (isprint (optopt))
@@ -74,7 +78,7 @@ int main(int argc, char **argv) {
         alarm(tt);
 
         // fork defaults: 5 forks, terminate after 2 seconds
-        // manage
+        // pidHolder[] holds the pid's of active children
         pid_t pidHolder[ss];
         for(int ii = 0; ii < ss; ii++) {
 
@@ -83,25 +87,40 @@ int main(int argc, char **argv) {
             }
         }
 
-        for(int aa = 0; aa < 10; aa++){
+        // system clock: 1,000,000 cycles
+        for(int aa = 0; aa < 100; aa++){
             pint[0]++;
             printf("%d\n", pint[0]);
-            usleep(100000);
-        }
+            // checks shMsh, pint[2], for a flag that child has completed
+            if(pint[2] == 1){
+                // pid and times to log
+                // GETS PID INCORRECT
+                // make duplicates of s
+                for(int bb = 0; bb < ss; bb++){
+                    if(wait(NULL) == pidHolder[bb]){
 
-        // pid and times to log
-        for(int bb = 0; bb < ss; bb++){
-            if(wait(NULL)==pidHolder[bb]){
-                //create file and write
-                printf("pid %d at time %d %d \n", pidHolder[bb], pint[0], pint[1]);
-                FILE *fp = fopen(filename,"a+");
-                fputs("Child: ", fp);
-                fprintf(fp, "%d", pidHolder[bb]);
-                fputs(" is terminating at my time ", fp);
-                fprintf(fp, "%d %s %d %s", pint[0], "seconds,", pint[1], "nanoseconds.\n");
-                fputs(" end \n", fp);
-                fclose(fp);
+                        //#########################
+                        //### WRITE TO LOG FILE ###
+                        //#########################
+                        //create file and write
+                        FILE *fp = fopen(filename,"a+");
+                        fputs("Child: ", fp);
+                        fprintf(fp, "%d", pidHolder[bb]);
+                        fputs(" is terminating at my time ", fp);
+                        fprintf(fp, "%d %s %d %s", pint[0], "seconds,", pint[1], "nanoseconds.\n");
+                        fclose(fp);
+
+                        // replace pidholder with new fork pid and exec
+                        if((pidHolder[bb] = fork()) == 0)
+                            execl("./user", "user", NULL);
+
+                    }
+                }
+                //flag back to 0
+                pint[2] = 0;
             }
+            // temporary - slows down the clock
+            usleep(100000);
         }
 
         wait(NULL);
@@ -130,11 +149,21 @@ static void ALARMhandler() {
 
 
 
+//        // pid and times to log
+//        for(int bb = 0; bb < ss; bb++){
+//            if(wait(NULL)==pidHolder[bb]){
+//                //create file and write
+//                printf("pid %d at time %d %d \n", pidHolder[bb], pint[0], pint[1]);
+//
+//            }
+//        }
 
 
 
-
-
+//                //call another child
+//                if ((fork()) == 0) {
+//                    execl("./user", "user", NULL);
+//                }
 
 
 //            FILE *fp = fopen(optarg,"a+");
