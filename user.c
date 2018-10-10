@@ -26,16 +26,18 @@ int main () {
     // pointer to shared memory that prints n
     int *cint = ( shmat ( shmid, NULL, 0 ) );
 
+
+    printf("\nhello from the user\n");
 //    sem_t *sem = sem_open("mysem", O_CREAT | O_EXCL, 0777, 1);
 //
-//    sem_wait(mutex);
+//    sem_wait(sem);
 
     cint[2] = 1;
 
-//    sem_post(mutex);
+//    sem_post(sem);
 
     usleep(500000);
-    printf("\nhello from the user\n");
+
 
     return 0;
 }
