@@ -11,10 +11,11 @@
 
 #define SHMKEY 123123
 
+int flag = 0;
+
 void sharedMemory();
 void helpMenu();
 static void ALARMhandler();
-
 
 int main(int argc, char **argv) {
 
@@ -75,6 +76,7 @@ int main(int argc, char **argv) {
 
         //alarm times out if forks all do not return in 2 seconds
         signal(SIGALRM, ALARMhandler);
+        // clean shared mem with alarm
         alarm(tt);
 
         // fork defaults: 5 forks, terminate after 2 seconds
@@ -88,17 +90,21 @@ int main(int argc, char **argv) {
         }
 
         // system clock: 1,000,000 cycles
-        for(int aa = 0; aa < 100; aa++){
-            pint[0]++;
+        while(1 && flag == 0){
+            pint[1] += 20000;
+
+            // adjust second and nanos
+            if(pint[1] > 999999999){
+                pint[0]++;
+                pint[1] = 0;
+            }
+
             printf("%d\n", pint[0]);
             // checks shMsh, pint[2], for a flag that child has completed
-            if(pint[2] == 1){
+            if(pint[2] > 0){
                 // pid and times to log
-                // GETS PID INCORRECT
-                // make duplicates of s
                 for(int bb = 0; bb < ss; bb++){
-                    if(wait(NULL) == pidHolder[bb]){
-
+                    if(pint[2] == pidHolder[bb]){
                         //#########################
                         //### WRITE TO LOG FILE ###
                         //#########################
@@ -119,14 +125,16 @@ int main(int argc, char **argv) {
                 //flag back to 0
                 pint[2] = 0;
             }
-            // temporary - slows down the clock
-            usleep(100000);
+
         }
 
+        // parent waits for all children to finish first
         wait(NULL);
         // clean shared mem
         shmdt(pint);
+
         printf("\n end of parent \n");
+//        sig_usr(1);
 
         return 0;
 }
@@ -142,32 +150,6 @@ void helpMenu() {
 // alarm magic
 static void ALARMhandler() {
     printf("Time ran out!\n");
+    flag = 1;
     exit(EXIT_SUCCESS);
 }
-
-
-
-
-
-//        // pid and times to log
-//        for(int bb = 0; bb < ss; bb++){
-//            if(wait(NULL)==pidHolder[bb]){
-//                //create file and write
-//                printf("pid %d at time %d %d \n", pidHolder[bb], pint[0], pint[1]);
-//
-//            }
-//        }
-
-
-
-//                //call another child
-//                if ((fork()) == 0) {
-//                    execl("./user", "user", NULL);
-//                }
-
-
-//            FILE *fp = fopen(optarg,"a+");
-//            fputs("string bean \n",fp);
-//            fputs("string bean \n",fp);
-//            fputs("string bean \n",fp);
-//            fclose(fp);

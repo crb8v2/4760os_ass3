@@ -20,10 +20,13 @@ sem_t *mutex;
 int main () {
 
     int exampleSize[3];
+    int randomNum = rand() % 1000000;
 
     int shmid = shmget ( SHMKEY, sizeof(exampleSize[3]), 0775 | IPC_CREAT );
     // pointer to shared memory that prints n
     int *cint = ( shmat ( shmid, NULL, 0 ) );
+
+    // create killtime
 
 
     printf("\nhello from the user\n");
@@ -32,19 +35,21 @@ int main () {
 //    sem_t *sem = sem_open("mysem", O_CREAT | O_EXCL, 0777, 1);
 
 
-//  // *** WAIT FOR SEMAPHORE
+    // *** WAIT FOR SEMAPHORE
 //    sem_wait(sem);
 
 
-// ########################
-// ### CRITICAL SECTION ###
-// ########################
-    cint[2] = 1;
+    // ########################
+    // ### CRITICAL SECTION ###
+    // ########################
+    cint[2] = getpid();
 
     // *** SIGNAL SEMAPHORE ***
 //    sem_post(sem);
 
-    usleep(500000);
+
+// semunlink with "mysem"
+//    usleep(500000);
 
 
     return 0;
