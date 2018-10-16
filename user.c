@@ -19,21 +19,31 @@ sem_t *mutex;
 
 int main () {
 
+    //    printf("\nhello from the user\n");
+
     int exampleSize[3];
-    int randomNum = rand() % 1000000;
+
+    //random number 1-1000000
+    int randomNum = (rand() % (1000000-1)) + 1;
 
     int shmid = shmget ( SHMKEY, sizeof(exampleSize[3]), 0775 | IPC_CREAT );
     // pointer to shared memory that prints n
     int *cint = ( shmat ( shmid, NULL, 0 ) );
 
     // create killtime
+    int nanos = cint[1];
+    int seconds = cint[0];
+    int rollover = 0;
 
-
-    printf("\nhello from the user\n");
+    // generates killtime if 1m rolls to 1b = 1sec
+    if ((nanos + randomNum) > 999999999){
+        rollover = (nanos + randomNum) - 999999999;
+        seconds += 1;
+        nanos += rollover;
+    }
 
     // *** CREATE SEMAPHORE
-//    sem_t *sem = sem_open("mysem", O_CREAT | O_EXCL, 0777, 1);
-
+//    sem_t *sem = sem_open("/mysem", O_CREAT | O_EXCL, 0777, 0);
 
     // *** WAIT FOR SEMAPHORE
 //    sem_wait(sem);
@@ -42,15 +52,17 @@ int main () {
     // ########################
     // ### CRITICAL SECTION ###
     // ########################
-    cint[2] = getpid();
+
+    //waits for time until termination
+    if(nanos == cint[1] && seconds == cint[0]){
+        cint[2] = getpid();
+        shmdt(cint);
+        return 0;
+    }
 
     // *** SIGNAL SEMAPHORE ***
 //    sem_post(sem);
 
+//    printf("\nhello from the user\n");
 
-// semunlink with "mysem"
-//    usleep(500000);
-
-
-    return 0;
-}
+ }

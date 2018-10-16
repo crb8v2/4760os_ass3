@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g
+CFLAGS = -g -pthread
 
 TARGET1 = oss
 TARGET2 = user
@@ -12,7 +12,7 @@ oss: $(OBJS1)
 	$(CC) $(CFLAGS) -o oss oss.o
 
 user: $(OBJS2)
-	$(CC) $(FLAGS) -o user user.o
+	$(CC) $(CFLAGS) -o user user.o
 
 clean:
 	/bin/rm -f *.o

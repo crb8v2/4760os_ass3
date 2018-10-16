@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
+#include <semaphore.h>
+#include <fcntl.h>
 
 #define SHMKEY 123123
 
@@ -24,6 +26,8 @@ int main(int argc, char **argv) {
     int cc, ss = 5, tt = 2;
     int exampleSize[3];
     char filename [50];
+    int forkCount = 0;
+
 
     //#############################
     // ### BLOCK FOR SHARED MEM ###
@@ -38,6 +42,9 @@ int main(int argc, char **argv) {
     pint[1] = 0;
     pint[2] = 0;
 
+    // *** CREATE SEMAPHORE
+//    sem_t *sem = sem_open("/mysem", O_CREAT | O_EXCL, 0777, 0);
+
     //command line options
     while ((cc = getopt (argc, argv, "hl:s:t:")) != -1)
         switch (cc)
@@ -49,7 +56,7 @@ int main(int argc, char **argv) {
                 break;
             case 'h': //help menu
                 helpMenu();
-                break;
+                return 0;
 
             case 's': // number of active children
                 ss = atoi(optarg);
@@ -81,6 +88,7 @@ int main(int argc, char **argv) {
 
         // fork defaults: 5 forks, terminate after 2 seconds
         // pidHolder[] holds the pid's of active children
+        forkCount = ss;
         pid_t pidHolder[ss];
         for(int ii = 0; ii < ss; ii++) {
 
@@ -93,6 +101,20 @@ int main(int argc, char **argv) {
         while(1 && flag == 0){
             pint[1] += 20000;
 
+            //check forks
+            if(forkCount == 100){
+                printf("Terminated after 100 forks\n");
+
+                // parent waits for all children to finish first
+                wait(NULL);
+                // clean shared mem
+                shmdt(pint);
+
+                return 0;
+            }
+
+
+
             // adjust second and nanos
             if(pint[1] > 999999999){
                 pint[0]++;
@@ -100,38 +122,53 @@ int main(int argc, char **argv) {
             }
 
             printf("%d\n", pint[0]);
+
+
             // checks shMsh, pint[2], for a flag that child has completed
             if(pint[2] > 0){
                 // pid and times to log
+
+                // *** WAIT FOR SEMAPHORE
+//              sem_wait(sem);
+
                 for(int bb = 0; bb < ss; bb++){
-                    if(pint[2] == pidHolder[bb]){
+                    if(pint[2] == pidHolder[bb]) {
                         //#########################
                         //### WRITE TO LOG FILE ###
                         //#########################
                         //create file and write
-                        FILE *fp = fopen(filename,"a+");
+                        FILE *fp = fopen(filename, "a+");
                         fputs("Child: ", fp);
                         fprintf(fp, "%d", pidHolder[bb]);
                         fputs(" is terminating at my time ", fp);
                         fprintf(fp, "%d %s %d %s", pint[0], "seconds,", pint[1], "nanoseconds.\n");
                         fclose(fp);
 
+                        forkCount++;
+
                         // replace pidholder with new fork pid and exec
-                        if((pidHolder[bb] = fork()) == 0)
+                        if ((pidHolder[bb] = fork()) == 0)
                             execl("./user", "user", NULL);
 
                     }
                 }
+
                 //flag back to 0
                 pint[2] = 0;
-            }
 
+                // *** SIGNAL SEMAPHORE ***
+//              sem_post(sem);
+            }
         }
 
         // parent waits for all children to finish first
         wait(NULL);
         // clean shared mem
         shmdt(pint);
+
+
+        // clear shared memory
+//        sem_unlink(sem);
 
         printf("\n end of parent \n");
 //        sig_usr(1);
@@ -144,7 +181,7 @@ void helpMenu() {
     printf("-h                    open help menu\n");
     printf("-s (int)              specify number of user processes\n");
     printf("-l filename           filename of the log file\n");
-    printf("-t (int)              time in seconds master will terminate");
+    printf("-t (int)              time in seconds master will terminate\n");
 }
 
 // alarm magic

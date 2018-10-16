@@ -1,0 +1,21 @@
+Connor Baniak
+
+10/15/18
+
+cs4760 OS
+
+
+Program generates executables oss and user. OSS acts as a sudo operating system and calls
+fork/execs to user. User waits for a moment of time, sends a shared memory flag to oss,
+dies, then OSS calls another fork. Using a semaphore, race conditions can be prevented.
+
+ -- HELP MENU --
+-h                    open help menu
+-s (int)              specify number of user processes allowed to run at once
+-l filename           filename of the log file
+
+*** The makefile only cleans text files called 'text.txt' Cleaning all text files could be dangerous.
+
+All parts of those project work besides the use of semaphores. My best attempt is
+commented out inline. Slowing down the oss timer and putting a wait on the user 
+processes shows more clearly the workflow.
