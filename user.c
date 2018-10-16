@@ -64,5 +64,5 @@ int main () {
 //    sem_post(sem);
 
 //    printf("\nhello from the user\n");
-
+    shmdt(cint);
  }

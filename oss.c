@@ -164,7 +164,7 @@ int main(int argc, char **argv) {
         // parent waits for all children to finish first
         wait(NULL);
         // clean shared mem
-        shmdt(pint);
+        shmdt(paddr);
 
 
         // clear shared memory
