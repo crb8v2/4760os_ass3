@@ -4,6 +4,8 @@ Connor Baniak
 
 cs4760 OS
 
+***GITHUB:
+https://github.com/crb8v2/4760os_ass3
 
 Program generates executables oss and user. OSS acts as a sudo operating system and calls
 fork/execs to user. User waits for a moment of time, sends a shared memory flag to oss,
